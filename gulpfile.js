@@ -6,6 +6,10 @@ var sass = require('gulp-sass');
 var postcss = require('gulp-postcss');
 var sourcemaps = require('gulp-sourcemaps');
 var autoprefixer = require('autoprefixer');
+var notify = require('gulp-notify');
+var plumber = require('gulp-plumber');
+var gutil = require('gulp-util');
+var uncss = require('gulp-uncss');
 var bourbon = require('node-bourbon').includePaths;
 var dirSync = require('gulp-directory-sync');
 var browserSync = require('browser-sync');
@@ -22,6 +26,14 @@ var f = {
   jade: 'dev/*.jade'
 };
 
+// error function for plumber
+var onError = function (err) {
+  gutil.beep();
+  console.log(err);
+  this.emit('end');
+};
+
+// Browser definitions for autoprefixer
 var autoprefixer_options = [
   'ie >= 8',
   'ie_mob >= 10',
@@ -35,7 +47,6 @@ var autoprefixer_options = [
 ];
 
 // Jade convert
-
 gulp.task('jade', function() {
   gulp.src(f.jade)
     .pipe(jade({
@@ -45,9 +56,9 @@ gulp.task('jade', function() {
 });
 
 // Sass convert & Autoprefixer
-
 gulp.task('sass', function() {
   gulp.src(f.scss)
+    .pipe(plumber({ errorHandler: onError }))
     .pipe(sourcemaps.init())
     .pipe(sass({
       includePaths: bourbon
