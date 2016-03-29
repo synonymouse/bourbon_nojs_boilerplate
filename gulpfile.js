@@ -9,12 +9,13 @@ var autoprefixer = require('autoprefixer');
 var notify = require('gulp-notify');
 var plumber = require('gulp-plumber');
 var gutil = require('gulp-util');
+var nano = require('gulp-cssnano');
 var uncss = require('gulp-uncss');
+var rename = require('gulp-rename');
 var bourbon = require('node-bourbon').includePaths;
 var dirSync = require('gulp-directory-sync');
 var browserSync = require('browser-sync');
 var injector = require('bs-html-injector');
-// var ghPages = require('gulp-gh-pages');
 var reload = browserSync.reload;
 
 var f = {
@@ -61,16 +62,24 @@ gulp.task('sass', function() {
     .pipe(plumber({ errorHandler: onError }))
     .pipe(sourcemaps.init())
     .pipe(sass({
+      style: 'expanded',
       includePaths: bourbon
     }).on('error', sass.logError))
     .pipe(postcss([autoprefixer({
       browsers: autoprefixer_options
     })]))
+    .pipe(uncss({
+            html: [f.html]
+        }))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(f.css))
+    .pipe(rename({ suffix: '.min' }))
+    .pipe(nano())
+    .pipe(gulp.dest(f.css)
     .pipe(browserSync.reload({
       stream: true
-    }));
+    }))
+    .pipe(notify({ message: 'Styles ready' }));
 });
 
 // Image sync
@@ -99,13 +108,6 @@ gulp.task('server', ['sass'], function() {
     notify: false
   });
 });
-
-// //Deploy to github pages
-//
-// gulp.task('deploy', function() {
-//   return gulp.src('./build/**/*')
-//     .pipe(ghPages());
-// });
 
 //Watch
 
