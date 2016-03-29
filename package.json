@@ -1,7 +1,7 @@
 {
   "name": "gulp-sass-bourbon-neat-boilerplate",
   "version": "1.0.0",
-  "description": "",
+  "description": "synonymouse html boilerplate",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -34,5 +34,6 @@
     "gulp-uncss": "^1.0.5",
     "gulp-util": "^3.0.7",
     "node-bourbon": "^4.2.3"
-  }
+  },
+  "dependencies": {}
 }
