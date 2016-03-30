@@ -65,21 +65,21 @@ gulp.task('sass', function() {
       style: 'expanded',
       includePaths: bourbon
     }).on('error', sass.logError))
-    .pipe(postcss([autoprefixer({
-      browsers: autoprefixer_options
-    })]))
     .pipe(uncss({
             html: [f.html]
         }))
+    .pipe(gulp.dest(f.css))
+    .pipe(postcss([autoprefixer({
+      browsers: autoprefixer_options
+    })]))
+    .pipe(nano())
+    .pipe(rename({ suffix: '.min' }))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(f.css))
-    .pipe(rename({ suffix: '.min' }))
-    .pipe(nano())
-    .pipe(gulp.dest(f.css)
     .pipe(browserSync.reload({
       stream: true
     }))
-    .pipe(notify({ message: 'Styles ready' }));
+    .pipe(notify( 'Styles ready' ));
 });
 
 // Image sync
