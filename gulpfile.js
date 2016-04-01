@@ -3,14 +3,13 @@
 var gulp = require('gulp');
 var jade = require('gulp-jade');
 var sass = require('gulp-sass');
-var postcss = require('gulp-postcss');
 var sourcemaps = require('gulp-sourcemaps');
+var postcss = require('gulp-postcss');
 var autoprefixer = require('autoprefixer');
 var notify = require('gulp-notify');
 var plumber = require('gulp-plumber');
 var gutil = require('gulp-util');
 var nano = require('gulp-cssnano');
-var uncss = require('gulp-uncss');
 var rename = require('gulp-rename');
 var bourbon = require('node-bourbon').includePaths;
 var dirSync = require('gulp-directory-sync');
@@ -27,12 +26,15 @@ var f = {
   jade: 'dev/*.jade'
 };
 
-// error function for plumber
-var onError = function (err) {
+// error and change functions
+var onError = function(err) {
   gutil.beep();
-  console.log(err);
   this.emit('end');
 };
+
+var onChange = function(event) {
+      console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
+    };
 
 // Browser definitions for autoprefixer
 var autoprefixer_options = [
@@ -48,8 +50,11 @@ var autoprefixer_options = [
 ];
 
 // Jade convert
-gulp.task('jade', function() {
+gulp.task('jade', ['sass'], function() {
   gulp.src(f.jade)
+    .pipe(plumber({
+      errorHandler: notify.onError("Error: <%= error.message %>")
+    }))
     .pipe(jade({
       pretty: true
     }))
@@ -59,27 +64,27 @@ gulp.task('jade', function() {
 // Sass convert & Autoprefixer
 gulp.task('sass', function() {
   gulp.src(f.scss)
-    .pipe(plumber({ errorHandler: onError }))
     .pipe(sourcemaps.init())
+    .pipe(plumber({
+      errorHandler: notify.onError("Error: <%= error.message %>")
+    }))
     .pipe(sass({
       style: 'expanded',
       includePaths: bourbon
-    }).on('error', sass.logError))
-    .pipe(uncss({
-            html: [f.html]
-        }))
-    .pipe(gulp.dest(f.css))
+    }))
+    .pipe(gulp.dest(f.css)) //export expanded css
     .pipe(postcss([autoprefixer({
       browsers: autoprefixer_options
     })]))
     .pipe(nano())
-    .pipe(rename({ suffix: '.min' }))
+    .pipe(rename({
+      suffix: '.min'
+    }))
     .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest(f.css))
+    .pipe(gulp.dest(f.css)) //export minified css
     .pipe(browserSync.reload({
       stream: true
     }))
-    .pipe(notify( 'Styles ready' ));
 });
 
 // Image sync
@@ -112,10 +117,10 @@ gulp.task('server', ['sass'], function() {
 //Watch
 
 gulp.task('watch', function() {
-  gulp.watch(f.jade, ['jade']);
-  gulp.watch(f.scss, ['sass']);
-  gulp.watch(f.dev + '/images', ['images:sync']);
-  gulp.watch(f.dev + '/js', ['js:sync']);
+  gulp.watch(f.jade, ['jade']).on('change', onChange);
+  gulp.watch(f.scss, ['sass']).on('change', onChange);
+  gulp.watch(f.dev + '/images', ['images:sync']).on('change', onChange);
+  gulp.watch(f.dev + '/js', ['js:sync']).on('change', onChange);
 });
 
 // Default Task
